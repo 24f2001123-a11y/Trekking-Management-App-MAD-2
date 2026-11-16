@@ -1,0 +1,2073 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TrekkingMate</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- VueJS -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  </head>
+
+  <body>
+    <div id="app" class="container mt-5">
+        <!-- TrekkingMate Logo and Heading -->
+<div class="d-flex align-items-center justify-content-center gap-3 mb-4 flex-wrap">
+
+    <!-- Logo -->
+    <img
+        src="{{ url_for('static', filename='images/logo.png') }}"
+        alt="TrekkingMate Logo"
+        style="width: 100px; height: 100px; object-fit: contain;"
+    />
+
+    <!-- Application Name and Tagline -->
+    <div>
+        <h1 class="text-primary mb-1"
+            style="font-size: 40px; font-weight: 600;">
+            TrekkingMate
+        </h1>
+
+        <p class="mb-0" style="font-size: 16px;">
+            Trekking Management Application
+        </p>
+    </div>
+
+</div>
+        
+
+
+      <!-- Display messages -->
+      <div
+        v-if="message"
+        class="alert"
+        :class="message_type === 'success' ? 'alert-success' : 'alert-danger'"
+      >
+        <span v-text="message"></span>
+      </div>
+
+      <!-- Login page -->
+      <div
+        v-if="page === 'login'"
+        class="card p-4 mt-4 mx-auto"
+        style="max-width: 500px"
+      >
+        <h4 class="text-center mb-3">Login</h4>
+
+        <form @submit.prevent="login">
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input
+              type="email"
+              class="form-control"
+              v-model="login_email"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input
+              type="password"
+              class="form-control"
+              v-model="login_password"
+              required
+            />
+          </div>
+
+          <button type="submit" class="btn btn-success w-100">Login</button>
+        </form>
+
+        <p class="text-center mt-3 mb-0">
+          Don't have an account?
+          <a href="#" @click.prevent="show_register">Register here</a>
+        </p>
+      </div>
+
+      <!-- Registration page -->
+      <div
+        v-if="page === 'register'"
+        class="card p-4 mt-4 mx-auto"
+        style="max-width: 500px"
+      >
+        <h4 class="text-center mb-3">Create Account</h4>
+
+        <form @submit.prevent="register">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input
+              type="text"
+              class="form-control"
+              v-model="register_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input
+              type="email"
+              class="form-control"
+              v-model="register_email"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Contact</label>
+            <input
+              type="text"
+              class="form-control"
+              v-model="register_contact"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input
+              type="password"
+              class="form-control"
+              v-model="register_password"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Confirm Password</label>
+            <input
+              type="password"
+              class="form-control"
+              v-model="confirm_password"
+              required
+            />
+          </div>
+
+          <button type="submit" class="btn btn-success w-100">Register</button>
+        </form>
+
+        <p class="text-center mt-3 mb-0">
+          Already have an account?
+          <a href="#" @click.prevent="show_login">Login here</a>
+        </p>
+      </div>
+
+      <!-- Logged-in page -->
+      
+<!-- Admin Dashboard -->
+<div v-if="page === 'admin_dashboard'">
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-dark bg-dark rounded p-3 mb-4">
+        <span class="navbar-brand mb-0 h4">TrekkingMate Admin</span>
+
+        <button class="btn btn-danger" @click="logout">
+            Logout
+        </button>
+    </nav>
+
+    <!-- Welcome Message -->
+    <div class="mb-4">
+        <h3>Welcome, <span v-text="user.name"></span>!</h3>
+        <p class="text-muted">Admin Dashboard</p>
+    </div>
+
+    <!-- Dashboard Cards -->
+    <div class="row">
+
+        <div class="col-md-3 mb-3">
+            <div class="card p-3 text-center">
+                <h5>Total Users</h5>
+                <h2 v-text="dashboard_stats.total_users"></h2>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card p-3 text-center">
+                <h5>Total Staff</h5>
+                <h2 v-text="dashboard_stats.total_staff"></h2>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card p-3 text-center">
+                <h5>Total Treks</h5>
+                <h2 v-text="dashboard_stats.total_treks"></h2>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card p-3 text-center">
+                <h5>Total Bookings</h5>
+                <h2 v-text="dashboard_stats.total_bookings"></h2>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Admin Options -->
+    <div class="card p-4 mt-3">
+        <h5>Admin Operations</h5>
+
+        <div class="mt-3">
+            <button class="btn btn-success me-2 mb-2" 
+            @click="show_create_trek">
+              Create Trek
+            </button>
+
+            <button class="btn btn-success me-2 mb-2" 
+            @click="view_treks">
+              Manage Treks
+            </button>
+
+            <button class="btn btn-success me-2 mb-2" 
+            @click="view_users()">
+              Manage Users
+            </button>
+
+            <button class="btn btn-success me-2 mb-2" 
+            @click="show_create_staff()">
+              Create Staff
+            </button>
+
+            <button class="btn btn-success me-2 mb-2" 
+            @click="view_staff()">
+              Manage Staff
+            </button>
+
+            <button class="btn btn-success me-2 mb-2" 
+            @click="view_bookings()">
+              Manage Bookings
+            </button>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- Create Trek Form -->
+<div v-if="show_trek_form" class="card p-4 mt-4">
+
+    <h4 class="mb-3">Create New Trek</h4>
+
+    <form @submit.prevent="create_trek">
+
+        <div class="mb-3">
+            <label class="form-label">Trek Name</label>
+            <input type="text" class="form-control"
+                   v-model="trek_name" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Location</label>
+            <input type="text" class="form-control"
+                   v-model="trek_location" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Difficulty</label>
+            <select class="form-select" v-model="trek_difficulty" required>
+                <option value="">Select Difficulty</option>
+                <option value="Easy">Easy</option>
+                <option value="Moderate">Moderate</option>
+                <option value="Hard">Hard</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Duration (Days)</label>
+            <input type="number" class="form-control"
+                   v-model="trek_duration" min="1" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Available Slots</label>
+            <input type="number" class="form-control"
+                   v-model="trek_slots" min="1" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Start Date</label>
+            <input type="date" class="form-control"
+                   v-model="trek_start_date" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">End Date</label>
+            <input type="date" class="form-control"
+                   v-model="trek_end_date" required>
+        </div>
+
+        <button type="submit" class="btn btn-success">
+            Create Trek
+        </button>
+
+        <button type="button" class="btn btn-secondary ms-2"
+                @click="show_trek_form = false">
+            Cancel
+        </button>
+
+    </form>
+
+</div>
+
+<!-- Manage Treks -->
+<div v-if="show_treks" class="card mt-4">
+
+    <div class="card-header">
+        <h4>Manage Treks</h4>
+    </div>
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-striped">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Trek Name</th>
+                        <th>Location</th>
+                        <th>Difficulty</th>
+                        <th>Duration</th>
+                        <th>Slots</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                        <th>Assigned Staff</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr v-for="trek in treks" :key="trek.id">
+
+                        <td v-text="trek.id"></td>
+                        <td v-text="trek.trek_name"></td>
+                        <td v-text="trek.location"></td>
+                        <td v-text="trek.difficulty"></td>
+                        <td v-text="trek.duration"></td>
+                        <td v-text="trek.available_slots"></td>
+                        <td v-text="trek.status"></td>
+                        <td v-text="trek.assigned_staff"></td>
+
+                        <td>
+                            <button class="btn btn-primary btn-sm me-1" 
+                            @click="edit_trek(trek)">
+                                Edit
+                            </button>
+
+                            <button class="btn btn-danger btn-sm me-1" 
+                            @click="delete_trek(trek.id)">
+                                Delete
+                            </button>
+
+                            <button class="btn btn-success btn-sm me-1" 
+                            @click="show_assign_staff(trek)">
+                                Assign Staff
+                            </button>
+
+                            <button v-if="trek.assigned_staff !== 'Not Assigned'"
+                            class="btn btn-warning btn-sm mt-1"
+                            @click="remove_staff_assignment(trek.id)">
+                                Remove Assigned Staff
+                            </button>
+                        </td>
+
+                    </tr>
+
+                    <tr v-if="treks.length === 0">
+                        <td colspan="8" class="text-center">
+                            No treks available.
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Assign Staff Section -->
+<div v-if="page === 'admin_dashboard' 
+    && show_assign_form"
+     class="container mt-4">
+
+    <div class="card">
+
+        <div class="card-header">
+            <h3>Assign Staff to Trek</h3>
+        </div>
+
+        <div class="card-body">
+
+            <p>
+                <strong>Trek:</strong>
+                <span v-text="assign_trek_name"></span>
+            </p>
+
+            <form @submit.prevent="assign_staff">
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Select Staff Member
+                    </label>
+
+                    <select class="form-select"
+                            v-model="selected_staff_id"
+                            required>
+
+                        <option value="">
+                            Select Staff
+                        </option>
+
+                        <option v-for="staff in staff_members.filter(s =>
+                            s.status === 'Active' 
+                            && !s.is_blacklisted)"
+                                :key="staff.id"
+                                :value="staff.id"
+                                v-text="staff.name">                       
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-success">
+                    Assign Staff
+                </button>
+
+                <button type="button"
+                        class="btn btn-secondary ms-2"
+                        @click="show_assign_form = false; 
+                        show_treks = true">
+                    Cancel
+                </button>
+
+            </form>
+
+            <p v-if="staff_members.filter(s =>
+                s.status === 'Active' 
+                && !s.is_blacklisted
+            ).length === 0"
+               class="text-danger mt-3">
+                No active staff members are available.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Edit Trek Form -->
+<div v-if="show_edit_form" class="card mt-4">
+
+    <div class="card-header">
+        <h4>Edit Trek</h4>
+    </div>
+
+    <div class="card-body">
+
+        <form @submit.prevent="update_trek">
+
+            <!-- Trek Name -->
+            <div class="mb-3">
+                <label class="form-label">Trek Name</label>
+                <input type="text"
+                       class="form-control"
+                       v-model="edit_trek_name"
+                       required>
+            </div>
+
+            <!-- Location -->
+            <div class="mb-3">
+                <label class="form-label">Location</label>
+                <input type="text"
+                       class="form-control"
+                       v-model="edit_trek_location"
+                       required>
+            </div>
+
+            <!-- Difficulty -->
+            <div class="mb-3">
+                <label class="form-label">Difficulty</label>
+                <select class="form-select"
+                        v-model="edit_trek_difficulty"
+                        required>
+
+                    <option value="">Select Difficulty</option>
+                    <option value="Easy">Easy</option>
+                    <option value="Moderate">Moderate</option>
+                    <option value="Hard">Hard</option>
+
+                </select>
+            </div>
+
+            <!-- Duration -->
+            <div class="mb-3">
+                <label class="form-label">Duration (Days)</label>
+                <input type="number"
+                       class="form-control"
+                       v-model="edit_trek_duration"
+                       min="1"
+                       required>
+            </div>
+
+            <!-- Available Slots -->
+            <div class="mb-3">
+                <label class="form-label">Available Slots</label>
+                <input type="number"
+                       class="form-control"
+                       v-model="edit_trek_slots"
+                       min="0"
+                       required>
+            </div>
+
+            <!-- Start Date -->
+            <div class="mb-3">
+                <label class="form-label">Start Date</label>
+                <input type="date"
+                       class="form-control"
+                       v-model="edit_trek_start_date"
+                       required>
+            </div>
+
+            <!-- End Date -->
+            <div class="mb-3">
+                <label class="form-label">End Date</label>
+                <input type="date"
+                       class="form-control"
+                       v-model="edit_trek_end_date"
+                       required>
+            </div>
+
+            <!-- Buttons -->
+            <button type="submit" class="btn btn-success me-2">
+                Save Changes
+            </button>
+
+            <button type="button"
+                    class="btn btn-secondary"
+                    @click="cancel_edit">
+                Cancel
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- Manage Users Section -->
+<div v-if="page === 'admin_dashboard' 
+    && show_users"
+     class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <h3>Manage Users</h3>
+
+        <button class="btn btn-secondary"
+                @click="show_users = false">
+            Back to Dashboard
+        </button>
+
+    </div>
+
+    <!-- Search Users -->
+    <div class="mb-3">
+
+        <input type="text"
+               class="form-control"
+               placeholder="Search by name or email"
+               v-model="user_search">
+
+    </div>
+
+    <!-- Users Table -->
+    <div class="table-responsive">
+
+        <table class="table table-bordered table-striped">
+
+            <thead class="table-dark">
+
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Contact</th>
+                    <th>Status</th>
+                    <th>Blacklist</th>
+                    <th>Actions</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                <tr v-for="user in users.filter(u =>
+                    u.name.toLowerCase().includes(user_search.toLowerCase()) ||
+                    u.email.toLowerCase().includes(user_search.toLowerCase())
+                )"
+                    :key="user.id">
+
+                    <td v-text="user.id"></td>
+
+                    <td v-text="user.name"></td>
+
+                    <td v-text="user.email"></td>
+
+                    <td v-text="user.contact || '-'"></td>
+
+                    <td>
+                        <span v-text="user.status"></span>
+                    </td>
+
+                    <td>
+                        <span v-if="user.is_blacklisted"
+                              class="text-danger">
+                            Blacklisted
+                        </span>
+
+                        <span v-else
+                              class="text-success">
+                            Not Blacklisted
+                        </span>
+                    </td>
+
+                    <td>
+
+                        <button class="btn btn-sm btn-primary me-1"
+                                @click="change_user_status(user)">
+
+                            <span v-if="user.status === 'Active'">
+                                Deactivate
+                            </span>
+
+                            <span v-else>
+                                Activate
+                            </span>
+
+                        </button>
+
+                        <button class="btn btn-sm btn-danger"
+                                @click="change_user_blacklist(user)">
+
+                            <span v-if="user.is_blacklisted">
+                                Remove Blacklist
+                            </span>
+
+                            <span v-else>
+                                Blacklist
+                            </span>
+
+                        </button>
+
+                    </td>
+
+                </tr>
+
+                <tr v-if="users.length === 0">
+
+                    <td colspan="7"
+                        class="text-center">
+                        No users found
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<!-- Create Staff Section -->
+<div v-if="page === 'admin_dashboard' 
+    && show_staff_form"
+     class="container mt-4">
+
+    <div class="card">
+
+        <div class="card-header">
+            <h3>Create Staff Account</h3>
+        </div>
+
+        <div class="card-body">
+
+            <form @submit.prevent="create_staff">
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Staff Name
+                    </label>
+
+                    <input type="text"
+                           class="form-control"
+                           v-model="staff_name"
+                           required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Email
+                    </label>
+
+                    <input type="email"
+                           class="form-control"
+                           v-model="staff_email"
+                           required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Contact
+                    </label>
+
+                    <input type="text"
+                           class="form-control"
+                           v-model="staff_contact">
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Password
+                    </label>
+
+                    <input type="password"
+                           class="form-control"
+                           v-model="staff_password"
+                           minlength="8"
+                           required>
+
+                </div>
+
+                <div class="mb-3">
+
+    <label class="form-label">
+        Confirm Password
+    </label>
+
+    <input type="password"
+           class="form-control"
+           v-model="staff_confirm_password"
+           minlength="8"
+           required>
+
+</div>
+
+                <button type="submit"
+                        class="btn btn-success">
+                    Create Staff
+                </button>
+
+                <button type="button"
+                        class="btn btn-secondary ms-2"
+                        @click="show_staff_form = false">
+                    Cancel
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Manage Staff Section -->
+<div v-if="page === 'admin_dashboard' 
+    && show_staff"
+     class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <h3>Manage Staff</h3>
+
+        <button class="btn btn-secondary"
+                @click="show_staff = false">
+            Back to Dashboard
+        </button>
+
+    </div>
+
+    <!-- Search Staff -->
+    <div class="mb-3">
+
+        <input type="text"
+               class="form-control"
+               placeholder="Search by name or email"
+               v-model="staff_search">
+
+    </div>
+
+    <!-- Staff Table -->
+    <div class="table-responsive">
+
+        <table class="table table-bordered table-striped">
+
+            <thead class="table-dark">
+
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Contact</th>
+                    <th>Status</th>
+                    <th>Blacklist</th>
+                    <th>Actions</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                <tr v-for="staff in staff_members.filter(s =>
+                    s.name.toLowerCase().includes(staff_search.toLowerCase()) ||
+                    s.email.toLowerCase().includes(staff_search.toLowerCase())
+                )"
+                    :key="staff.id">
+
+                    <td v-text="staff.id"></td>
+
+                    <td v-text="staff.name"></td>
+
+                    <td v-text="staff.email"></td>
+
+                    <td v-text="staff.contact || '-'"></td>
+
+                    <td v-text="staff.status"></td>
+
+                    <td>
+
+                        <span v-if="staff.is_blacklisted"
+                              class="text-danger">
+                            Blacklisted
+                        </span>
+
+                        <span v-else
+                              class="text-success">
+                            Not Blacklisted
+                        </span>
+
+                    </td>
+
+                    <td>
+
+                        <button class="btn btn-sm btn-primary me-1"
+                                @click="change_staff_status(staff)">
+
+                            <span v-if="staff.status === 'Active'">
+                                Deactivate
+                            </span>
+
+                            <span v-else>
+                                Activate
+                            </span>
+
+                        </button>
+
+                        <button class="btn btn-sm btn-danger"
+                                @click="change_staff_blacklist(staff)">
+
+                            <span v-if="staff.is_blacklisted">
+                                Remove Blacklist
+                            </span>
+
+                            <span v-else>
+                                Blacklist
+                            </span>
+
+                        </button>
+
+                    </td>
+
+                </tr>
+
+                <tr v-if="staff_members.length === 0">
+
+                    <td colspan="7" class="text-center">
+                        No staff members found
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- Manage Bookings -->
+<div v-if="page === 'admin_dashboard' 
+    && show_bookings"
+     class="container mt-4">
+
+    <div class="card">
+
+        <div class="card-header">
+            <h3>Manage Bookings</h3>
+        </div>
+
+        <div class="card-body">
+
+            <!-- Search bookings -->
+            <div class="mb-3">
+                <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Search by user name, email or trek name"
+                    v-model="booking_search"
+                >
+            </div>
+
+            <!-- Bookings table -->
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-striped">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>User Name</th>
+                            <th>User Email</th>
+                            <th>Trek Name</th>
+                            <th>Location</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Booking Date</th>
+                            <th>Booking Status</th>
+                            <th>Payment Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr v-for="booking in search_bookings()"
+                            :key="booking.id">
+
+                            <td v-text="booking.id"></td>
+                            <td v-text="booking.user_name"></td>
+                            <td v-text="booking.user_email"></td>
+                            <td v-text="booking.trek_name"></td>
+                            <td v-text="booking.location"></td>
+                            <td v-text="booking.start_date"></td>
+                            <td v-text="booking.end_date"></td>
+                            <td v-text="booking.booking_date"></td>
+                            <td v-text="booking.status"></td>
+                            <td v-text="booking.payment_status"></td>
+                            <td> 
+                                <button
+                                    v-if="booking.status === 'Booked'"
+                                    class="btn btn-danger btn-sm"
+                                    @click="cancel_booking(booking.id)">
+                                     Cancel Booking
+                                </button>
+
+                                <span v-else class="text-muted">
+                                    No Action
+                                </span>
+                            </td>
+
+                        </tr>
+
+                        <tr v-if="search_bookings().length === 0">
+                            <td colspan="11" class="text-center">
+                                No bookings found.
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <button class="btn btn-secondary"
+                    @click="show_bookings = false">
+                Back to Dashboard
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- Staff Dashboard -->
+<div v-if="page === 'staff_dashboard'">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+
+            <span class="navbar-brand">
+                TrekkingMate Staff
+            </span>
+
+            <button class="btn btn-danger"
+                    @click="logout()">
+                Logout
+            </button>
+
+        </div>
+    </nav>
+
+    <!-- Dashboard content -->
+    <div class="container mt-4">
+
+        <h2>Staff Dashboard</h2>
+
+        <p>
+            Welcome,
+            <strong v-text="user ? user.name : ''"></strong>
+        </p>
+
+        <p>
+            Manage your assigned treks and participants from here.
+        </p>
+
+        <!-- Dashboard options -->
+        <div class="row mt-4" 
+            v-if="!show_assigned_treks 
+            && !show_manage_trek 
+            && !show_participants">
+
+            <div class="col-md-4 mb-3">
+
+                <div class="card">
+
+                    <div class="card-body text-center">
+
+                        <h5>My Assigned Treks</h5>
+
+                        <p>
+                            View the treks assigned to you.
+                        </p>
+
+                        <button class="btn btn-success"
+                                 @click="view_assigned_treks()">
+                            View Treks
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <div class="card">
+
+                    <div class="card-body text-center">
+
+                        <h5>Participants</h5>
+
+                        <p>
+                            View users registered for your treks.
+                        </p>
+
+                        <button class="btn btn-success"
+                                @click="open_participants_page()">
+                            View Participants
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <div class="card">
+
+                    <div class="card-body text-center">
+
+                        <h5>Manage Treks</h5>
+
+                        <p>
+                            Manage availability and trek status.
+                        </p>
+
+                        <button class="btn btn-success"
+                                @click="open_manage_treks_page()()">
+                            Manage Treks
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Assigned Treks -->
+<div v-if="page === 'staff_dashboard' 
+     && show_assigned_treks"
+     class="mt-4">
+
+    <div class="card">
+
+        <div class="card-header">
+            <h3>My Assigned Treks</h3>
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-striped">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Trek Name</th>
+                            <th>Location</th>
+                            <th>Difficulty</th>
+                            <th>Duration</th>
+                            <th>Available Slots</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr v-for="trek in assigned_treks"
+                            :key="trek.id">
+
+                            <td v-text="trek.id"></td>
+                            <td v-text="trek.trek_name"></td>
+                            <td v-text="trek.location"></td>
+                            <td v-text="trek.difficulty"></td>
+                            <td v-text="trek.duration"></td>
+                            <td v-text="trek.available_slots"></td>
+                            <td v-text="trek.start_date"></td>
+                            <td v-text="trek.end_date"></td>
+                            <td v-text="trek.status"></td>
+                            <td>
+                                
+                                <button class="btn btn-primary btn-sm me-1"
+                                        @click="show_manage_trek_form(trek)"
+                                        v-if="trek.status !== 'Completed'">
+                                    Manage
+                                </button>
+
+                                <button class="btn btn-primary btn-sm me-1"
+                                        @click="view_participants(trek)">
+                                    Participants
+                                </button>
+
+                                <button class="btn btn-warning btn-sm mt-1"
+                                        @click="complete_trek(trek)"
+                                        v-if="trek.status !== 'Completed'">
+                                    Complete Trek
+                                </button>
+
+                                <span class="text-success"
+                                      v-if="trek.status === 'Completed'">
+                                    Completed
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                        <tr v-if="assigned_treks.length === 0">
+
+                            <td colspan="10" class="text-center">
+                                No treks have been assigned to you.
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <button class="btn btn-secondary"
+                    @click="back_to_staff_dashboard()">
+                Back to Dashboard
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Manage Treks List -->
+<div v-if="page === 'staff_dashboard' 
+     && show_manage_treks"
+     class="mt-4">
+
+    <div class="card">
+
+        <div class="card-header">
+            <h3>Manage Treks</h3>
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-striped">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Trek Name</th>
+                            <th>Location</th>
+                            <th>Available Slots</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr v-for="trek in assigned_treks"
+                            :key="trek.id">
+
+                            <td v-text="trek.trek_name"></td>
+                            <td v-text="trek.location"></td>
+                            <td v-text="trek.available_slots"></td>
+                            <td v-text="trek.status"></td>
+
+                            <td>
+                                <button class="btn btn-primary btn-sm"
+                                        @click="show_manage_trek_form(trek)"
+                                        v-if="trek.status !== 'Completed'">
+                                    Manage
+                                </button>
+
+                                <span v-else class="text-success">
+                                    Completed
+                                </span>
+                            </td>
+
+                        </tr>
+
+                        <tr v-if="assigned_treks.length === 0">
+                            <td colspan="5" class="text-center">
+                                No treks have been assigned to you.
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <button class="btn btn-secondary"
+                    @click="back_to_staff_dashboard()">
+                Back to Dashboard
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+    
+    <!-- Manage Trek Form -->
+<div v-if="page === 'staff_dashboard' 
+    && show_manage_trek"
+     class="mt-4">
+
+    <div class="card">
+
+        <div class="card-header">
+            <h3>Manage Trek</h3>
+        </div>
+
+        <div class="card-body">
+
+            <h5 v-text="selected_trek ? selected_trek.trek_name : ''"></h5>
+
+            <form @submit.prevent="save_trek_changes">
+
+                <!-- Available Slots -->
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Available Slots
+                    </label>
+
+                    <input
+                        type="number"
+                        class="form-control"
+                        v-model="manage_available_slots"
+                        min="0"
+                        required
+                    >
+
+                </div>
+
+                <!-- Trek Status -->
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Trek Status
+                    </label>
+
+                    <select class="form-select"
+                            v-model="manage_trek_status"
+                            required>
+
+                        <option value="Open">Open</option>
+                        <option value="Closed">Closed</option>
+
+                    </select>
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-success">
+                    Save Changes
+                </button>
+
+                <button type="button"
+                        class="btn btn-secondary ms-2"
+                        @click="cancel_manage_trek()">
+                    Cancel
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Select Trek to View Participants -->
+<div v-if="page === 'staff_dashboard' && show_participant_treks"
+     class="mt-4">
+
+    <div class="card">
+
+        <div class="card-header">
+            <h3>Select Trek to View Participants</h3>
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-striped">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Trek Name</th>
+                            <th>Location</th>
+                            <th>Start Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr v-for="trek in assigned_treks"
+                            :key="trek.id">
+
+                            <td v-text="trek.trek_name"></td>
+                            <td v-text="trek.location"></td>
+                            <td v-text="trek.start_date"></td>
+
+                            <td>
+                                <button class="btn btn-primary btn-sm"
+                                        @click="view_participants(trek)">
+                                    View Participants
+                                </button>
+                            </td>
+
+                        </tr>
+
+                        <tr v-if="assigned_treks.length === 0">
+                            <td colspan="4" class="text-center">
+                                No treks have been assigned to you.
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <button class="btn btn-secondary"
+                    @click="back_to_staff_dashboard()">
+                Back to Dashboard
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+    <!-- View Participants -->
+<div v-if="page === 'staff_dashboard' 
+    && show_participants"
+     class="mt-4">
+
+    <div class="card">
+
+        <div class="card-header">
+            <h3>Participants</h3>
+        </div>
+
+        <div class="card-body">
+
+            <h5>
+                Trek:
+                <span v-text="selected_trek_name"></span>
+            </h5>
+
+            <div class="table-responsive mt-3">
+
+                <table class="table table-bordered table-striped">
+
+                    <thead class="table-dark">
+
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Contact</th>
+                            <th>Booking Date</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <tr v-for="participant in participants"
+                            :key="participant.booking_id">
+
+                            <td v-text="participant.booking_id"></td>
+                            <td v-text="participant.user_id"></td>
+                            <td v-text="participant.name"></td>
+                            <td v-text="participant.email"></td>
+                            <td v-text="participant.contact || 'Not provided'"></td>
+                            <td v-text="participant.booking_date"></td>
+                            <td v-text="participant.status"></td>
+
+                        </tr>
+
+                        <tr v-if="participants.length === 0">
+
+                            <td colspan="7" class="text-center">
+                                No participants have booked this trek yet.
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <button class="btn btn-secondary"
+                    @click="back_to_participant_treks()">
+                Back to Assigned Treks
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+    </div>
+
+</div>
+
+
+
+<!-- User Dashboard -->
+<div v-if="page === 'dashboard'">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+
+            <span class="navbar-brand">
+                TrekkingMate User
+            </span>
+
+            <button class="btn btn-danger" @click="logout()">
+                Logout
+            </button>
+
+        </div>
+    </nav>
+
+    <!-- Dashboard Heading -->
+    <div class="container mt-4">
+
+        <h3>Welcome to TrekkingMate!</h3>
+
+        <p>
+            Hello,
+            <span v-text="user.name"></span>!
+            Welcome to your trekking dashboard.
+        </p>
+
+        <!-- Dashboard Cards -->
+        <div class="row mt-4"
+             v-if="!show_browse_treks 
+             && !show_my_bookings 
+             && !show_edit_profile
+             && !show_trek_details">
+
+            <!-- Browse Treks -->
+            <div class="col-md-4 mb-3">
+                <div class="card p-4 text-center h-100">
+
+                    <h5>Browse Treks</h5>
+
+                    <p>Explore available trekking trips.</p>
+
+                    <button class="btn btn-success"
+                            @click="show_browse_treks_page()">
+                        Browse Treks
+                    </button>
+
+                </div>
+            </div>
+
+            <!-- My Bookings -->
+            <div class="col-md-4 mb-3">
+                <div class="card p-4 text-center h-100">
+
+                    <h5>My Bookings</h5>
+
+                    <p>View your trekking bookings.</p>
+
+                    <button class="btn btn-success"
+                            @click="show_my_bookings_page()">
+                        My Bookings
+                    </button>
+
+                </div>
+            </div>
+
+            <!-- Edit Profile -->
+            <div class="col-md-4 mb-3">
+                <div class="card p-4 text-center h-100">
+
+                    <h5>Edit Profile</h5>
+
+                    <p>View and update your account details.</p>
+
+                    <button class="btn btn-success"
+                            @click="show_edit_profile_page()">
+                        Edit Profile
+                    </button>
+
+                </div>
+            </div>
+
+        </div>
+
+
+<!-- Browse Treks Section -->
+<div v-if="show_browse_treks" class="card p-4 mt-4">
+
+    <h4>Available Treks</h4>
+
+    <p>Search and filter available trekking trips.</p>
+
+    <!-- Error Message -->
+    <div v-if="message"
+         class="alert"
+         :class="message_type === 'success' ? 'alert-success' : 'alert-danger'">
+
+        <span v-text="message"></span>
+
+    </div>
+
+    
+<!-- Search and Filter Options -->
+<div v-if="available_treks.length > 0" class="row mb-3">
+
+    <!-- Search by Trek Name -->
+    <div class="col-md-3 mb-2">
+
+        <label class="form-label">Search by Trek Name</label>
+
+        <input type="text"
+               class="form-control"
+               v-model="search_trek_name"
+               placeholder="Enter trek name">
+
+    </div>
+
+    <!-- Search by Location -->
+    <div class="col-md-3 mb-2">
+
+        <label class="form-label">Search by Location</label>
+
+        <input type="text"
+               class="form-control"
+               v-model="search_location"
+               placeholder="Enter location">
+
+    </div>
+
+    <!-- Filter by Difficulty -->
+    <div class="col-md-3 mb-2">
+
+        <label class="form-label">Difficulty</label>
+
+        <select class="form-select"
+                v-model="search_difficulty">
+
+            <option value="">All Difficulties</option>
+            <option value="Easy">Easy</option>
+            <option value="Moderate">Moderate</option>
+            <option value="Hard">Hard</option>
+
+        </select>
+
+    </div>
+
+    <!-- Filter by Duration -->
+    <div class="col-md-3 mb-2">
+
+        <label class="form-label">Maximum Duration (Days)</label>
+
+        <input type="number"
+               class="form-control"
+               v-model="search_duration"
+               min="1"
+               placeholder="Enter maximum days">
+
+    </div>
+
+    <!-- Clear Filters Button -->
+    <div class="col-12 mt-2">
+
+        <button class="btn btn-secondary"
+                @click="clear_trek_filters()">
+
+            Clear Filters
+
+        </button>
+
+    </div>
+
+</div>
+
+
+    <!-- Treks Table -->
+    <div v-if="available_treks.length > 0 &&
+               filter_treks().length > 0"
+         class="table-responsive">
+
+        <table class="table table-bordered table-striped">
+
+            <thead class="table-dark">
+
+                <tr>
+                    <th>ID</th>
+                    <th>Trek Name</th>
+                    <th>Location</th>
+                    <th>Difficulty</th>
+                    <th>Duration</th>
+                    <th>Available Slots</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Action</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                <tr v-for="trek in filter_treks()"
+                    :key="trek.id">
+
+                    <td v-text="trek.id"></td>
+
+                    <td v-text="trek.trek_name"></td>
+
+                    <td v-text="trek.location"></td>
+
+                    <td v-text="trek.difficulty"></td>
+
+                    <td>
+                        <span v-text="trek.duration"></span>
+                        Days
+                    </td>
+
+                    <td v-text="trek.available_slots"></td>
+
+                    <td v-text="trek.start_date"></td>
+
+                    <td v-text="trek.end_date"></td>
+
+                    <td>
+                        <button class="btn btn-primary btn-sm"
+                                @click="view_trek_details(trek)">
+                            View Details
+                        </button>
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- No Treks Available -->
+    <div v-else-if="available_treks.length === 0 
+        && !message"
+         class="alert alert-info">
+
+        No open treks are currently available.
+
+    </div>
+
+    <!-- No Matching Treks -->
+    <div v-else-if="available_treks.length > 0 
+        && filter_treks().length === 0"
+         class="alert alert-warning">
+
+        No treks match your search or filter.
+
+    </div>
+
+    <button class="btn btn-secondary mt-3"
+            @click="back_to_user_dashboard()">
+
+        Back to Dashboard
+
+    </button>
+
+</div>
+
+
+<!-- Trek Details Section -->
+<div v-if="show_trek_details 
+    && selected_trek"
+     class="card p-4 mt-4">
+
+    <h4>Trek Details</h4>
+
+    <hr>
+
+    <p>
+        <strong>Trek Name:</strong>
+        <span v-text="selected_trek.trek_name"></span>
+    </p>
+
+    <p>
+        <strong>Location:</strong>
+        <span v-text="selected_trek.location"></span>
+    </p>
+
+    <p>
+        <strong>Difficulty:</strong>
+        <span v-text="selected_trek.difficulty"></span>
+    </p>
+
+    <p>
+        <strong>Duration:</strong>
+        <span v-text="selected_trek.duration"></span>
+        Days
+    </p>
+
+    <p>
+        <strong>Available Slots:</strong>
+        <span v-text="selected_trek.available_slots"></span>
+    </p>
+
+    <p>
+        <strong>Start Date:</strong>
+        <span v-text="selected_trek.start_date"></span>
+    </p>
+
+    <p>
+        <strong>End Date:</strong>
+        <span v-text="selected_trek.end_date"></span>
+    </p>
+
+    <p>
+        <strong>Status:</strong>
+        <span v-text="selected_trek.status"></span>
+    </p>
+
+    <!-- Booking Button -->
+<button class="btn btn-success mt-3"
+        v-if="selected_trek.status === 'Open' && selected_trek.available_slots > 0"
+        @click="book_trek()">
+
+    Book This Trek
+
+</button>
+
+
+
+    <button class="btn btn-secondary mt-3"
+            @click="back_to_available_treks()">
+
+        Back to Available Treks
+
+    </button>
+
+</div>
+
+
+
+        
+<!-- My Bookings Section -->
+<div v-if="show_my_bookings" class="card p-4 mt-4">
+
+    <h4>My Bookings</h4>
+
+    <p>View your trekking booking history.</p>
+
+    <!-- Export Booking History -->
+    <div class="mb-3">
+
+        <button class="btn btn-success"
+                @click="export_booking_history()"
+                :disabled="export_loading">
+
+            <span v-if="export_loading">
+                Generating CSV...
+            </span>
+
+            <span v-else>
+                Export Booking History (CSV)
+            </span>
+
+        </button>
+
+        <p v-if="export_message"
+           class="mt-2 text-success"
+           v-text="export_message">
+        </p>
+
+    </div>
+
+    <!-- Error Message -->
+    <div v-if="message"
+         class="alert alert-danger">
+
+        <span v-text="message"></span>
+
+    </div>
+
+    <!-- Booking Table -->
+    <div v-if="my_bookings.length > 0"
+         class="table-responsive">
+
+        <table class="table table-bordered table-striped">
+
+            <thead class="table-dark">
+
+                <tr>
+                    <th>Booking ID</th>
+                    <th>Trek Name</th>
+                    <th>Location</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Booking Date</th>
+                    <th>Status</th>
+                    <th>Payment Status</th>
+                    <th>Action</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                <tr v-for="booking in my_bookings"
+                    :key="booking.id">
+
+                    <td v-text="booking.id"></td>
+
+                    <td v-text="booking.trek_name"></td>
+
+                    <td v-text="booking.location"></td>
+
+                    <td v-text="booking.start_date"></td>
+
+                    <td v-text="booking.end_date"></td>
+
+                    <td v-text="booking.booking_date"></td>
+
+                    <td v-text="booking.status"></td>
+
+                    <td v-text="booking.payment_status"></td>
+
+                    <td>
+                        <button v-if="booking.status === 'Booked'"
+                                class="btn btn-danger btn-sm"
+                                @click="cancel_booking(booking.id)">
+                            Cancel Booking
+                        </button>
+                        <span v-else>No Action</span>
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- No Bookings -->
+    <div v-else-if="!message"
+         class="alert alert-info">
+
+        You have not booked any treks yet.
+
+    </div>
+
+    <button class="btn btn-secondary mt-3"
+            @click="back_to_user_dashboard()">
+
+        Back to Dashboard
+
+    </button>
+
+</div>
+
+
+        
+<!-- Edit Profile Section -->
+<div v-if="show_edit_profile" class="card p-4 mt-4">
+
+    <h4>Edit Profile</h4>
+
+    <p>Update your account information.</p>
+
+    <!-- Message -->
+    <div v-if="message"
+         class="alert"
+         :class="message_type === 'success' ? 'alert-success' : 'alert-danger'">
+
+        <span v-text="message"></span>
+
+    </div>
+
+    <!-- Name -->
+    <div class="mb-3">
+
+        <label class="form-label">Name</label>
+
+        <input type="text"
+               class="form-control"
+               v-model="profile_name"
+               required>
+
+    </div>
+
+    <!-- Email -->
+    <div class="mb-3">
+
+        <label class="form-label">Email</label>
+
+        <input type="email"
+               class="form-control"
+               :value="user.email"
+               disabled>
+
+    </div>
+
+    <!-- Contact -->
+    <div class="mb-3">
+
+        <label class="form-label">Contact Number</label>
+
+        <input type="text"
+               class="form-control"
+               v-model="profile_contact"
+               maxlength="15">
+
+    </div>
+
+    <button class="btn btn-success ms-2"
+            @click="update_profile()">
+
+        Save Changes
+
+    </button>
+
+    <button class="btn btn-secondary mt-2 ms-2"
+            @click="back_to_user_dashboard()">
+
+        Back to Dashboard
+
+    </button>
+
+</div>
+
+
+    </div>
+
+</div>
+    </div>
+
+
+
+    <!-- Our VueJS application -->
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/staff.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/user.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>
